@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <jansson.h>
+
 #include "vbios-tables.h"
 #include "VRAMInfo.h"
 
@@ -11,6 +13,9 @@
 #define AMD_VBIOS_GDDR5_TIMING_HEX_SIZE		(AMD_VBIOS_TIMING_RAW_SIZE << 1)
 #define AMD_VBIOS_GDDR6_TIMING_RAW_SIZE		0x70
 #define AMD_VBIOS_GDDR6_TIMING_HEX_SIZE		(AMD_VBIOS_GDDR6_TIMING_RAW_SIZE << 1)
+
+json_t *DumpNaviRegsAsJSON(const uint32_t *RegTemplate);
+bool LoadNaviRegsFromJSON(uint32_t *RegTemplate, json_t *JSONCfg);
 
 // Parameter len is the size in bytes of asciistr, meaning rawstr
 // must have (len >> 1) bytes allocated
@@ -53,7 +58,7 @@ void usage(char *FileName)
 	printf("\t--verbose\t| -v\tShow additional details\n");
 	printf("\t--module\t| -m\tSelect module\n");
 	printf("\t--read\t\t| -r\tMemClk\n");
-	printf("\t--write\t\t| -w\tMemClk HexTimings\n");
+	printf("\t--write\t\t| -w\tMemClk JSONTimingsFile\n");
 	exit(-1);
 }
 
@@ -389,9 +394,9 @@ int main(int argc, char **argv)
 {
 	size_t BytesRead;
 	FILE *VBIOSFile = NULL;
-	uint8_t VBIOSImage[0x80000];
+	uint8_t *VBIOSImage;
 	uint32_t MemClk = 0, Module = 0, ReqTimingsLen = 0;
-	uint8_t *RequestedTimings;
+	uint8_t RequestedTimings[28 * 4];
 	bool Writing = false, ModuleSet = false, Show = false, Verbose = false, Found = false;
 	bool TestFuncs = false;
 
@@ -440,6 +445,8 @@ int main(int argc, char **argv)
 		}
 		else if(!strcmp(argv[i], "-w") | !strcmp(argv[i], "--write"))
 		{
+			FILE *JSONFile;
+			
 			if((argc - i) < 2)
 			{
 				printf("Argument \"%s\" requires two parameters.\n", argv[i]);
@@ -469,12 +476,28 @@ int main(int argc, char **argv)
 
 			// It's done like this to correctly handle missing leading zeroes.
 			// TODO/FIXME: Assumes GDDR5 timing lengths
-
-			++i;
-
-			ReqTimingsLen = strlen(argv[i]) >> 1;
-			RequestedTimings = (uint8_t *)malloc(sizeof(uint8_t) * ReqTimingsLen);
-			ASCIIHexToBinary(RequestedTimings, argv[i], strlen(argv[i]));
+			
+			JSONFile = fopen(argv[++i], "rb");
+			if(!JSONFile)
+			{
+				printf("Failed to open file (does it exist?)\n");
+				return(-1);
+			}
+			
+			json_t *ReqTimingsJSON = json_loadf(JSONFile, JSON_DISABLE_EOF_CHECK, NULL);
+			if(!ReqTimingsJSON)
+			{
+				printf("Error parsing JSON.\n");
+				return(-1);
+			}
+			
+			fclose(JSONFile);
+			
+			memset(RequestedTimings, 0x00, 28 * 4);
+			LoadNaviRegsFromJSON(RequestedTimings, ReqTimingsJSON);
+			json_decref(ReqTimingsJSON);
+			//RequestedTimings = (uint8_t *)malloc(sizeof(uint8_t) * ReqTimingsLen);
+			//ASCIIHexToBinary(RequestedTimings, argv[i], strlen(argv[i]));
 
 
 			//for(int x = 0; x < (strlen(argv[i]) >> 3); ++x) ((uint32_t *)RequestedTimings)[x] = __builtin_bswap32(((uint32_t *)RequestedTimings)[x]);
@@ -509,6 +532,7 @@ int main(int argc, char **argv)
 	}
 
 	//MemClk *= 100;
+	VBIOSImage = (uint8_t *)malloc(sizeof(uint8_t) * 0x80000);
 	BytesRead = fread(VBIOSImage, sizeof(uint8_t), 0x80000, VBIOSFile);
 
 	/*if((BytesRead != 0x10000) && (BytesRead != 0x20000) && (BytesRead != 0x40000) && (BytesRead != 0x80000))
@@ -528,7 +552,7 @@ int main(int argc, char **argv)
 
 	uint32_t MemClkPatchTblOffset;
 
-	printf("VRAM_Info table format revision %d, content revision %d\n", ((ATOM_TABLE_HEADER *)VRInfoBase)->TableFormatRevision, ((ATOM_TABLE_HEADER *)VRInfoBase)->TableContentRevision);
+	//printf("VRAM_Info table format revision %d, content revision %d\n", ((ATOM_TABLE_HEADER *)VRInfoBase)->TableFormatRevision, ((ATOM_TABLE_HEADER *)VRInfoBase)->TableContentRevision);
 
 	if(((ATOM_TABLE_HEADER *)VRInfoBase)->TableContentRevision == 2)
 	{
@@ -748,20 +772,25 @@ int main(int argc, char **argv)
 				Found = true;
 
 				if(!Writing)
-				{
-					// Don't print leading zeroes
-					//printf("%X", __builtin_bswap32(((uint32_t *)CurrentMemSettingDataBlk)[1]));
-
-					for(int i = 0; i < IRIdxEntries; ++i)
-						printf("%08X", __builtin_bswap32(((VEGA_DATA_BLOCK *)CurrentMemSettingDataBlk)->Data[i]));
+				{	
+					uint32_t RegValues[28];
+					json_t *JSONTimings;
+					for(int i = 0; i < IRIdxEntries; ++i) RegValues[i] = ((VEGA_DATA_BLOCK *)CurrentMemSettingDataBlk)->Data[i];
+					
+					//for(int i = 0; i < IRIdxEntries; ++i)
+					//	printf("%08X", __builtin_bswap32(((VEGA_DATA_BLOCK *)CurrentMemSettingDataBlk)->Data[i]));
+					
+					JSONTimings = DumpNaviRegsAsJSON(RegValues);
+					printf("\n%s\n", json_dumps(JSONTimings, JSON_INDENT(4)));
+					json_decref(JSONTimings);
 				}
 				else
 				{
-					if(ReqTimingsLen != (IRIdxEntries * sizeof(uint32_t)))
-					{
-						printf("Incorrect length of timing data. Unable to write.\n");
-						return(-4);
-					}
+					//if(ReqTimingsLen != (IRIdxEntries * sizeof(uint32_t)))
+					//{
+					//	printf("Incorrect length of timing data. Unable to write.\n");
+					//	return(-4);
+					//}
 					memcpy(((VEGA_DATA_BLOCK *)CurrentMemSettingDataBlk)->Data, RequestedTimings, IRIdxEntries * sizeof(uint32_t));
 				}
 			}

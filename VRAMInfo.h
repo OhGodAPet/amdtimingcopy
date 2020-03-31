@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <gmc10.h>
+#include "vram/navi.h"
 
 #pragma pack(push, 1)
 
@@ -134,10 +134,10 @@ typedef struct _ATOM_VRAM_MODULE_V10
 	uint8_t		RefreshRateFactor;			// 0x19
 	uint8_t		VRAMFlags;					// 0x1A; Bit 0: Bank grouping enable/disable
 	uint8_t		Reserved2;					// 0x1B
-	GDDR6_MODE_REG_10	GDDR6_MR10;			// 0x1C - 0x1D
+	uint16_t	GDDR6_MR10;			// 0x1C - 0x1D
 	GDDR6_MODE_REG_1	GDDR6_MR1;			// 0x1E - 0x1F
-	GDDR6_MODE_REG_2	GDDR6_MR2;			// 0x20 - 0x21
-	GDDR6_MODE_REG_7	GDDR6_MR7;			// 0x22 - 0x23
+	uint16_t			GDDR6_MR2;			// 0x20 - 0x21
+	uint16_t			GDDR6_MR7;			// 0x22 - 0x23
 	char PNString[20];						// 0x24 - 0x37
 } ATOM_VRAM_MODULE_V10;
 
