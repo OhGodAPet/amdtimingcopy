@@ -1,3 +1,5 @@
+// Copyright 2022 Wolf9466
+
 #pragma once
 
 #include <stdint.h>
@@ -134,12 +136,39 @@ typedef struct _ATOM_VRAM_MODULE_V10
 	uint8_t		RefreshRateFactor;			// 0x19
 	uint8_t		VRAMFlags;					// 0x1A; Bit 0: Bank grouping enable/disable
 	uint8_t		Reserved2;					// 0x1B
-	uint16_t	GDDR6_MR10;			// 0x1C - 0x1D
+	GDDR6_MODE_REG_10	GDDR6_MR10;			// 0x1C - 0x1D
 	GDDR6_MODE_REG_1	GDDR6_MR1;			// 0x1E - 0x1F
-	uint16_t			GDDR6_MR2;			// 0x20 - 0x21
-	uint16_t			GDDR6_MR7;			// 0x22 - 0x23
+	GDDR6_MODE_REG_2	GDDR6_MR2;			// 0x20 - 0x21
+	GDDR6_MODE_REG_7	GDDR6_MR7;			// 0x22 - 0x23
 	char PNString[20];						// 0x24 - 0x37
 } ATOM_VRAM_MODULE_V10;
+
+typedef struct _ATOM_VRAM_MODULE_V11
+{
+	uint32_t 	MemorySize;					// 0x00 - 0x03
+	uint32_t	ChannelEnable;				// 0x04 - 0x07
+	uint16_t	MemVoltage;					// 0x08 - 0x0A
+	uint16_t	ModuleSize;					// 0x0A - 0x0C
+	uint8_t		ExtMemoryID;				// 0x0D
+	uint8_t		MemoryType;					// 0x0E
+	uint8_t		ChannelNum;					// 0x0F
+	uint8_t		ChannelWidth;				// 0x10
+	uint8_t		Density;					// 0x11
+	uint8_t		MCTuningSetID;				// 0x12
+	uint16_t	Reserved[4];				// 0x13 - 0x1A
+	uint8_t		MemoryVendorRevisionID;		// 0x1A; [7:4] Revision, [3:0] Vendor
+	uint8_t		RefreshRateFactor;			// 0x1B; [1:0]=RefreshFactor (00=8ms, 01=16ms, 10=32ms,11=64ms)
+	uint8_t		VRAMFlags;					// 0x1C; Bit 0: Bank grouping enable/disable
+	uint8_t		Reserved2;					// 0x1D
+	GDDR6_MODE_REG_10	GDDR6_MR10;			// 0x1E - 0x1F
+	GDDR6_MODE_REG_0	GDDR6_MR0;			// 0x20 - 0x22
+	GDDR6_MODE_REG_1	GDDR6_MR1;			// 0x23 - 0x24
+	GDDR6_MODE_REG_2	GDDR6_MR2;			// 0x25 - 0x26
+	GDDR6_MODE_REG_4	GDDR6_MR4;			// 0x27 - 0x28
+	GDDR6_MODE_REG_7 	GDDR6_MR7;			// 0x29 - 0x1A
+	GDDR6_MODE_REG_8	GDDR6_MR8;			// 0x1B - 0x1C
+	char PNString[40];						// Ends with NULL
+} ATOM_VRAM_MODULE_V11;
 
 typedef union _ATOM_VRAM_MODULE
 {
@@ -147,6 +176,7 @@ typedef union _ATOM_VRAM_MODULE
 	ATOM_VRAM_MODULE_V8		AsModuleV8;
 	ATOM_VRAM_MODULE_V9		AsModuleV9;
 	ATOM_VRAM_MODULE_V10	AsModuleV10;
+	ATOM_VRAM_MODULE_V11	AsModuleV11;
 } ATOM_VRAM_MODULE;
 
 typedef struct _VRAM_INFO_HEADER_V2_4
@@ -165,6 +195,23 @@ typedef struct _VRAM_INFO_HEADER_V2_4
 	uint8_t UMC_IP_MAX_VER;				// 0x16
 	uint8_t MCPhyTileNumber;			// 0x17
 } VRAM_INFO_HEADER_V2_4;
+
+typedef struct _VRAM_INFO_HEADER_V2_5
+{
+	ATOM_TABLE_HEADER CommonHeader;
+	uint16_t MemAdjTblOffset;
+	uint16_t GDDR6ACTimingOffset;
+	uint16_t MCAdjustPerTileTblOffset;
+	uint16_t MCPhyInitTableOffset;
+	uint16_t DRAMDataRemapTblOffset;
+	uint16_t Reserved;
+	uint16_t PostUcodeInitOffset;
+	uint16_t StrobeModePatchTblOffset;
+	uint8_t NumberOfVRAMModules;
+	uint8_t UMC_IP_MIN_VER;
+	uint8_t UMC_IP_MAX_VER;
+	uint8_t MCPhyTileNumber;
+} VRAM_INFO_HEADER_V2_5;
 
 typedef struct _TIMING_ENTRY
 {

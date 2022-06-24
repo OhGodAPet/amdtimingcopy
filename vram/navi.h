@@ -1,3 +1,5 @@
+// Copyright 2022 Wolf9466
+
 #ifndef _NAVIMEMREGS_H
 #define _NAVIMEMREGS_H
 
@@ -305,88 +307,6 @@ static_assert(sizeof(Navi10TRFCTimingCS01) == sizeof(uint32_t), "Register defini
 static_assert(sizeof(Navi10ChanPipeDly) == sizeof(uint32_t), "Register definition Navi10ChanPipeDly is not 32 bits.");
 
 
-// Since valid values begin at 4, and that represents
-// a value of 9, we offset the input by adding 5 before
-// we take care of the changes CLEHF causes.
-
-// It is the responsibility of the caller to ensure
-// the validity of the arguments. tCLVal must be a
-// 4 bit value (0 - 15, inclusive), and CLEHF must
-// only be one bit - 0 or 1. Any returned value
-// resulting from invalid inputs is considered
-// to be undefined.
-
-#define TRANSLATEMR0CASVALUE(tCLVal, CLEHF)		(((((uint8_t)(tCLVal)) & 0x0F) + 5U) | ((((uint8_t)(CLEHF)) & 1) << 4U))
-#define TRANSLATEMR0TWRVALUE(tWRVal, WREHF)		(((((uint8_t)(tWRVal)) & 0x0F) + 4U) | ((((uint8_t)(WREHF)) & 1) << 4U))
-
-
-typedef struct _GDDR6_MODE_REG_0
-{
-	uint16_t WL : 3;
-	uint16_t tCL : 4;
-	uint16_t TestMode : 1;
-	uint16_t tWR : 4;
-	uint16_t ModeRegID : 4;
-} GDDR6_MODE_REG_0;
-
-typedef struct _GDDR6_MODE_REG_1
-{
-	uint16_t DriveStrength : 2;
-	uint16_t DataTermination : 2;
-	uint16_t PLLDLLRange : 2;
-	uint16_t CalibrationUpdate : 1;
-	uint16_t PLLDLLEnable : 1;
-	uint16_t ReadDBI : 1;
-	uint16_t WriteDBI : 1;
-	uint16_t CABI : 1;
-	uint16_t PLLReset : 1;
-	uint16_t ModeRegID : 4;
-} GDDR6_MODE_REG_1;
-
-typedef struct _GDDR6_MODE_REG_3
-{
-	uint16_t DataWCKTermOffset : 3;
-	uint16_t CATermOffset : 3;
-	uint16_t DRAMInfo : 2;
-	uint16_t WRScaling : 2;
-	uint16_t BankGroups : 2;
-	uint16_t ModeRegID : 4;
-} GDDR6_MODE_REG_3;
-
-typedef struct _GDDR6_MODE_REG_4
-{
-	uint16_t EDCHoldPattern : 4;
-	uint16_t CRCWL : 3;
-	uint16_t CRCRL : 2;
-	uint16_t RDCRC : 1;
-	uint16_t WRCRC : 1;
-	uint16_t EDCInv : 1;
-	uint16_t ModeRegID : 4;
-} GDDR6_MODE_REG_4;
-
-typedef struct _GDDR6_MODE_REG_5
-{
-	uint16_t LP1 : 1;
-	uint16_t LP2 : 1;
-	uint16_t LP3 : 1;
-	uint16_t PLLDLLBW : 3;
-	uint16_t RAS : 6;
-	uint16_t ModeRegID : 4;
-} GDDR6_MODE_REG_5;
-
-typedef struct _GDDR6_MODE_REG_8
-{
-	uint16_t CALTerm : 2;
-	uint16_t CAHTerm : 2;
-	uint16_t CATO : 1;
-	uint16_t EDCHighZ : 1;
-	uint16_t CKAC : 1;
-	uint16_t REFPB : 1;
-	uint16_t RLEHF : 1;
-	uint16_t WREHF : 1;
-	uint16_t CKTerm : 2;
-	uint16_t ModeRegID : 4;
-} GDDR6_MODE_REG_8;
 
 // tCL == tCL + 5
 // WR == WR - 1
@@ -445,6 +365,77 @@ typedef struct _Navi10TimingFmt
 	Navi10TRFCTimingCS01 TRFC;
 	uint32_t ChanPipeDly;
 } Navi10TimingFmt;
+
+typedef struct UMCIDAccess_s
+{
+	uint32_t MemClkRange : 24;
+	uint32_t ModuleNum : 8;
+} UMCIDAccess;
+
+typedef struct Navi21TimingFmt_s
+{
+	UMCIDAccess u32umc_id_access;
+	uint8_t  RL;
+	uint8_t  WL;
+	uint8_t  tRAS;
+	uint8_t  tRC;
+
+	uint16_t  tREFI;
+	uint8_t  tRFC;
+	uint8_t  tRFCpb;
+
+	uint8_t  tRREFD;
+	uint8_t  tRCDRD;
+	uint8_t  tRCDWR;
+	uint8_t  tRP;
+
+	uint8_t  tRRDS;
+	uint8_t  tRRDL;
+	uint8_t  tWR;
+	uint8_t  tWTRS;
+
+	uint8_t  tWTRL;
+	uint8_t  tFAW;
+	uint8_t  tCCDS;
+	uint8_t  tCCDL;
+
+	uint8_t  tCRCRL;
+	uint8_t  tCRCWL;
+	uint8_t  tCKE;
+	uint8_t  tCKSRE;
+
+	uint8_t  tCKSRX;
+	uint8_t  tRTPS;
+	uint8_t  tRTPL;
+	uint8_t  tMRD;
+
+	uint8_t  tMOD;
+	uint8_t  tXS;
+	uint8_t  tXHP;
+	uint8_t  tXSMRS;
+
+	uint32_t  tXSH;
+
+	uint8_t  tPD;
+	uint8_t  tXP;
+	uint8_t  tCPDED;
+	uint8_t  tACTPDE;
+
+	uint8_t  tPREPDE;
+	uint8_t  tREFPDE;
+	uint8_t  tMRSPDEN;
+	uint8_t  tRDSRE;
+
+	uint8_t  tWRSRE;
+	uint8_t  tPPD;
+	uint8_t  tCCDMW;
+	uint8_t  tWTRTR;
+
+	uint8_t  tLTLTR;
+	uint8_t  tREFTR;
+	uint8_t  VNDR;
+	uint8_t  reserved[9];
+} Navi21TimingFmt;
 
 #pragma pack(pop)
 

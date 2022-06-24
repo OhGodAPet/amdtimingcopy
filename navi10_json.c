@@ -1,3 +1,5 @@
+// Copyright 2022 Wolf9466
+
 #include <stdio.h>
 #include <errno.h>
 #include <stdint.h>
@@ -6,6 +8,7 @@
 #include <stdbool.h>
 #include <jansson.h>
 
+#include "gddr6.h"
 #include "vram/navi.h"
 
 uint32_t amd_bfe(uint32_t s0, uint32_t s1, uint32_t s2)
