@@ -7,31 +7,13 @@
 #include <stdbool.h>
 #include <jansson.h>
 
+#include "amdtimingutils.h"
 #include "vbios-tables.h"
-#include "gddr6.h"
-#include "VRAMInfo.h"
 
-#define MAX_NUMBER_OF_VRAM_MODULES		16
-#define AMD_VBIOS_GDDR5_TIMING_RAW_SIZE		0x30
-#define AMD_VBIOS_GDDR5_TIMING_HEX_SIZE		(AMD_VBIOS_TIMING_RAW_SIZE << 1)
-
-// Polaris uses less, but Navi1x needs at least
-// 112 bytes (224 ASCII hex digits) for the GDDR6
-// timing set. The Polaris timing set only requires
-// 48 bytes (96 ASCII hex digits) for its timing set.
-
-#define AMD_NAVI1X_INPUT_TIMING_HEX_SIZE	224
-#define AMD_NAVI1X_INPUT_TIMING_RAW_SIZE	(AMD_NAVI1X_INPUT_TIMING_HEX_SIZE >> 1)
-#define AMD_POLARIS_INPUT_TIMING_HEX_SIZE	96
-#define AMD_POLARIS_INPUT_TIMING_RAW_SIZE	(AMD_POLARIS_INPUT_TIMING_HEX_SIZE >> 1)
-#define AMD_VBIOS_GDDR6_TIMING_RAW_SIZE		0x70
-#define AMD_VBIOS_GDDR6_TIMING_HEX_SIZE		(AMD_VBIOS_GDDR6_TIMING_RAW_SIZE << 1)
-
-json_t *DumpNaviRegsAsJSON(const uint32_t *RegTemplate);
-bool LoadNaviRegsFromJSON(uint32_t *RegTemplate, json_t *JSONCfg);
-
-json_t *DumpNavi2RegsAsJSON(const Navi21TimingFmt *val);
-bool LoadNavi2RegsFromJSON(Navi21TimingFmt *val, json_t *JSONCfg);
+// General settings/constants
+#define AMDTIMINGCOPY_VERSION_STR			"0.8"
+#define AMDTIMINGCOPY_MAJOR_VERSION			0
+#define AMDTIMINGCOPY_MINOR_VERSION			8
 
 // Parameter len is the size in bytes of asciistr, meaning rawstr
 // must have (len >> 1) bytes allocated
@@ -532,7 +514,7 @@ int main(int argc, char **argv)
 	bool Writing = false, Show = false, Verbose = false, Found = false;
 	bool TestFuncs = false;
 	
-	fprintf(stderr, "amdtimingcopy by Wolf9466 (aka Wolf0/OhGodAPet)\n");
+	fprintf(stderr, "amdtimingcopy v%s by Wolf9466 (aka Wolf0/OhGodAPet)\n", AMDTIMINGCOPY_VERSION_STR);
 	fprintf(stderr, "Donation address (BTC): 1WoLFumNUvjCgaCyjFzvFrbGfDddYrKNR\n");
 	
 	if(argc < 4 || argc > 10) usage(argv[0]);
