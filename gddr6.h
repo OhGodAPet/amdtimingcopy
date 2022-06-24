@@ -3,6 +3,8 @@
 #ifndef __GDDR6_H
 #define __GDDR6_H
 
+#include "vbios-tables.h"
+
 // Since valid values begin at 4, and that represents
 // a value of 9, we offset the input by adding 5 before
 // we take care of the changes CLEHF causes.

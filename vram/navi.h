@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "../gddr6.h"
+
 #pragma pack(push, 1)
 
 // DramBaseAddress0

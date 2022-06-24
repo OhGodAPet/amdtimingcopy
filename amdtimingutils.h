@@ -5,12 +5,6 @@
 // Structures, function prototypes, and other things
 // useful to any tool requiring AMD timing utilities.
 #include "VRAMInfo.h"
-#include "gddr6.h"
-
-// General settings/constants
-#define AMDTIMINGCOPY_VERSION_STR			"0.8"
-#define AMDTIMINGCOPY_MAJOR_VERSION			0
-#define AMDTIMINGCOPY_MINOR_VERSION			8
 
 #define MAX_NUMBER_OF_VRAM_MODULES			16
 #define AMD_VBIOS_GDDR5_TIMING_RAW_SIZE		0x30
